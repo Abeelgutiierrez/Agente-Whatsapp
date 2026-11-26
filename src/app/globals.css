@@ -3672,3 +3672,192 @@ td {
     min-height: 40px;
   }
 }
+
+/* Asistente de WhatsApp interactivo (vista cliente) */
+.agent-wrap {
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+  width: 100%;
+}
+.agent-chat {
+  width: 100%;
+  max-width: 450px;
+  display: flex;
+  flex-direction: column;
+}
+.agent-body {
+  min-height: 0;
+  height: 470px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px 14px;
+}
+.agent-body .chat-security {
+  margin-bottom: 10px;
+}
+.agent-msg {
+  display: flex;
+}
+.agent-msg.from-user {
+  justify-content: flex-end;
+}
+.agent-bubble {
+  position: relative;
+  max-width: 82%;
+  background: #fff;
+  color: #3f503c;
+  padding: 9px 12px 20px;
+  border-radius: 0 9px 9px 9px;
+  box-shadow: 0 1px 2px #2e44281a;
+  font-size: 13px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  animation: agent-in 0.18s ease-out;
+}
+.from-user .agent-bubble {
+  background: #d9f2cc;
+  color: #2f4a2a;
+  border-radius: 9px 0 9px 9px;
+}
+.agent-time {
+  position: absolute;
+  right: 9px;
+  bottom: 4px;
+  font-size: 9px;
+  color: #6a7464;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.from-user .agent-time svg {
+  color: #3d8bb5;
+}
+.agent-typing {
+  display: flex;
+  gap: 4px;
+  padding: 13px 14px;
+}
+.agent-typing i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #93a08c;
+  animation: agent-dot 1s infinite ease-in-out;
+}
+.agent-typing i:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.agent-typing i:nth-child(3) {
+  animation-delay: 0.3s;
+}
+.agent-replies {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 6px;
+}
+.agent-replies button {
+  background: #fff;
+  color: var(--brand);
+  border: 1px solid #cddcc9;
+  border-radius: 18px;
+  padding: 8px 13px;
+  font-size: 12px;
+  min-height: 36px;
+  text-transform: none;
+}
+.agent-replies button:first-letter {
+  text-transform: uppercase;
+}
+.agent-replies button:hover {
+  background: var(--brand);
+  color: #fff;
+}
+.agent-input {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #f4f3ec;
+  border-top: 1px solid #e1e7d9;
+}
+.agent-input input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid #dfe4d8;
+  border-radius: 20px;
+  padding: 10px 14px;
+  font-size: 14px;
+  background: #fff;
+}
+.agent-input button {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--brand);
+  color: #fff;
+  flex: none;
+}
+.agent-input button:disabled {
+  opacity: 0.45;
+}
+.agent-demo-callout {
+  width: 100%;
+  max-width: 450px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: space-between;
+  background: #eef5e8;
+  border: 1px solid #d5e4c9;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 12px;
+  color: #3f5539;
+}
+.agent-form-link {
+  font-size: 12px;
+}
+.whatsapp-item {
+  background: #f0f6ea;
+  border-radius: 10px;
+  padding: 10px;
+}
+@keyframes agent-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+@keyframes agent-dot {
+  0%,
+  80%,
+  100% {
+    opacity: 0.3;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .agent-bubble,
+  .agent-typing i {
+    animation: none;
+  }
+}
+@media (max-width: 560px) {
+  .agent-body {
+    height: 62vh;
+  }
+  .agent-demo-callout {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

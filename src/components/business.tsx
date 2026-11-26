@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowDownToLine,
   ArrowUpRight,
@@ -68,6 +68,9 @@ type Props = {
   refresh: (force?: boolean) => Promise<void>;
   notify: (text: string) => void;
   newBooking: () => void;
+  focusBooking?: string | null;
+  onFocusHandled?: () => void;
+  recentWhatsApp?: string[];
 };
 export function Business({
   state,
@@ -77,6 +80,9 @@ export function Business({
   refresh,
   notify,
   newBooking,
+  focusBooking,
+  onFocusHandled,
+  recentWhatsApp = [],
 }: Props) {
   const today = dayKey(state.meta.now);
   const [bookingId, setBookingId] = useState<string | null>(null);
@@ -96,6 +102,13 @@ export function Business({
   } | null>(null);
   const selected = state.bookings.find((b) => b.id === bookingId);
   const client = state.clients.find((c) => c.id === clientId);
+  // Llegada desde el WhatsApp de la vista cliente: abre la cita recién creada.
+  useEffect(() => {
+    if (focusBooking && state.bookings.some((b) => b.id === focusBooking)) {
+      setBookingId(focusBooking);
+      onFocusHandled?.();
+    }
+  }, [focusBooking, state.bookings, onFocusHandled]);
   function goAgenda(date = today, serviceId = "", status = "") {
     setFilters({ from: date, to: date, serviceId, status });
     onSection("agenda");
@@ -144,6 +157,7 @@ export function Business({
           newBooking={newBooking}
           onMessage={openMessage}
           act={act}
+          recentWhatsApp={recentWhatsApp}
         />
       )}
       {section === "agenda" && (
@@ -305,6 +319,7 @@ function Today({
   goAgenda,
   newBooking,
   onMessage,
+  recentWhatsApp,
 }: {
   state: State;
   openBooking: (id: string) => void;
@@ -312,6 +327,7 @@ function Today({
   newBooking: () => void;
   onMessage: (b: Booking) => void;
   act: (b: Booking, status: Status) => Promise<void>;
+  recentWhatsApp: string[];
 }) {
   const today = dayKey(state.meta.now);
   const data = useMemo(() => metrics(state, today, today), [state, today]);
@@ -337,6 +353,14 @@ function Today({
           dayKey(b.start) === today &&
           b.status === "pendiente",
       ),
+  );
+  // Reservas que han entrado por WhatsApp mientras la demo está abierta.
+  const fromWhatsApp = recentWhatsApp
+    .map((id) => state.bookings.find((b) => b.id === id))
+    .filter((b): b is Booking => Boolean(b) && b!.status !== "cancelada");
+  const latestWhatsApp = fromWhatsApp.at(-1);
+  const latestClient = state.clients.find(
+    (c) => c.id === latestWhatsApp?.clientId,
   );
   const visible = data.all.filter((b) => showPast || b.end > state.meta.now);
   const remaining = next
@@ -553,13 +577,37 @@ function Today({
             <div className="panel-heading">
               <h2>Un momento de atención</h2>
               <span className="attention-count">
-                {Number(pending.length > 0) +
+                {Number(Boolean(latestWhatsApp)) +
+                  Number(pending.length > 0) +
                   Number(Boolean(cancelled)) +
                   Number(Boolean(waiting)) +
                   Number(data.occupancy >= 80)}
               </span>
             </div>
             <div className="attention-content">
+              {latestWhatsApp && (
+                <div className="attention-item whatsapp-item">
+                  <span className="attention-icon green">
+                    <MessageCircle size={16} />
+                  </span>
+                  <div>
+                    <h3>
+                      {fromWhatsApp.length === 1
+                        ? "Nueva reserva por WhatsApp"
+                        : `${fromWhatsApp.length} reservas nuevas por WhatsApp`}
+                    </h3>
+                    <p>
+                      {latestClient?.name} · {latestWhatsApp.serviceName} ·{" "}
+                      {dateLabel(latestWhatsApp.start, "EEEE d")} a las{" "}
+                      {timeLabel(latestWhatsApp.start)}. Reservada por el
+                      asistente, sin llamadas.
+                    </p>
+                    <TextLink onClick={() => openBooking(latestWhatsApp.id)}>
+                      Ver la reserva
+                    </TextLink>
+                  </div>
+                </div>
+              )}
               {pending.length > 0 && (
                 <div className="attention-item">
                   <span className="attention-icon amber">
@@ -616,7 +664,7 @@ function Today({
                   añadir una cita.
                 </div>
               )}
-              {!pending.length && !cancelled && !waiting && (
+              {!pending.length && !cancelled && !waiting && !latestWhatsApp && (
                 <Empty
                   title="Todo bajo control"
                   text="No hay avisos que necesiten tu atención."

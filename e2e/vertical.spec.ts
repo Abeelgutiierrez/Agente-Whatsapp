@@ -26,7 +26,7 @@ test("reserva móvil → agenda en otro navegador → hueco ocupado", async ({
   ).toBeVisible({ timeout: 30000 });
   await page.goto("/demo?vista=cliente");
   await page
-    .getByRole("button", { name: "Reservar cita", exact: true })
+    .getByRole("button", { name: "Prefiero reservar con el formulario" })
     .click();
   await page.getByRole("button", { name: /Fisioterapia Recupera/ }).click();
   await page.locator(".calendar-week button:not([disabled])").first().click();
@@ -57,7 +57,7 @@ test("reserva móvil → agenda en otro navegador → hueco ocupado", async ({
   await expect(page.locator(".manage-result")).toContainText("Fisioterapia");
   await page.getByRole("button", { name: "Cerrar", exact: true }).click();
   await page
-    .getByRole("button", { name: "Reservar cita", exact: true })
+    .getByRole("button", { name: "Prefiero reservar con el formulario" })
     .click();
   await page.getByRole("button", { name: /Fisioterapia Recupera/ }).click();
   await page.locator(".calendar-week button:not([disabled])").first().click();

@@ -5,15 +5,12 @@ import {
   ArrowRight,
   CalendarDays,
   ChartNoAxesCombined,
-  CheckCheck,
   ChevronRight,
   CircleHelp,
   Clock3,
   HeartHandshake,
   House,
   Leaf,
-  MessageCircle,
-  MoreHorizontal,
   Settings2,
   ShieldCheck,
   Sparkles,
@@ -29,6 +26,7 @@ import { dateLabel, timeLabel, money } from "@/domain/time";
 import { api } from "@/lib/http";
 import { BookingFlow, Confirmation } from "./booking-flow";
 import { Business } from "./business";
+import { WhatsAppAgent } from "./whatsapp-agent";
 import { Badge, ErrorBox, Loading, Modal } from "./ui";
 export type Section = "today" | "agenda" | "clients" | "insights" | "settings";
 const navigation = [
@@ -46,13 +44,37 @@ export function Workspace() {
   const [newBooking, setNewBooking] = useState(false);
   const [toast, setToast] = useState("");
   const [help, setHelp] = useState(false);
+  const [focusBooking, setFocusBooking] = useState<string | null>(null);
+  // Reservas de WhatsApp que han entrado mientras la demo está abierta.
+  const [recentWhatsApp, setRecentWhatsApp] = useState<string[]>([]);
   const revision = useRef(-1);
+  const knownBookings = useRef<Set<string> | null>(null);
   const refresh = useCallback(async (force = false) => {
     try {
       const data = await api<State & { unchanged?: boolean }>(
         `business?revision=${force ? -1 : revision.current}`,
       );
       if (!data.unchanged) {
+        // Aviso en vivo cuando entra una reserva nueva por WhatsApp.
+        const known = knownBookings.current;
+        const fresh = known
+          ? data.bookings.filter(
+              (b) => !known.has(b.id) && b.source === "WhatsApp",
+            )
+          : [];
+        knownBookings.current = new Set(data.bookings.map((b) => b.id));
+        const last = fresh.at(-1);
+        if (fresh.length)
+          setRecentWhatsApp((ids) => [
+            ...ids,
+            ...fresh.map((b) => b.id).filter((id) => !ids.includes(id)),
+          ]);
+        if (last) {
+          const person = data.clients.find((c) => c.id === last.clientId);
+          setToast(
+            `Nueva reserva por WhatsApp: ${person?.name || "cliente"} · ${last.serviceName} · ${dateLabel(last.start, "EEEE d")} a las ${timeLabel(last.start)}`,
+          );
+        }
         revision.current = data.meta.revision;
         setState(data);
         setConfig({
@@ -76,6 +98,12 @@ export function Workspace() {
     api<PublicConfig>("config")
       .then(setConfig)
       .catch((e) => setError(e.message));
+    // Foto inicial de la agenda para detectar después las reservas nuevas.
+    api<State>("business?revision=-1")
+      .then((data) => {
+        knownBookings.current ??= new Set(data.bookings.map((b) => b.id));
+      })
+      .catch(() => {});
   }, []);
   useEffect(() => {
     if (view !== "business") return;
@@ -92,7 +120,7 @@ export function Workspace() {
   }, [view, refresh]);
   useEffect(() => {
     if (toast) {
-      const t = setTimeout(() => setToast(""), 4500);
+      const t = setTimeout(() => setToast(""), 7000);
       return () => clearTimeout(t);
     }
   }, [toast]);
@@ -235,7 +263,17 @@ export function Workspace() {
           </span>
         </div>
         {view === "client" ? (
-          <PatientExperience config={config} />
+          <PatientExperience
+            config={config}
+            onSeeBusiness={(b) => {
+              setFocusBooking(b.id);
+              setRecentWhatsApp((ids) =>
+                ids.includes(b.id) ? ids : [...ids, b.id],
+              );
+              setSection("today");
+              switchView("business");
+            }}
+          />
         ) : (
           <main id="main-content" className="business-main">
             <ErrorBox error={error} />
@@ -250,6 +288,9 @@ export function Workspace() {
                 refresh={refresh}
                 notify={setToast}
                 newBooking={() => setNewBooking(true)}
+                focusBooking={focusBooking}
+                recentWhatsApp={recentWhatsApp}
+                onFocusHandled={() => setFocusBooking(null)}
               />
             )}
           </main>
@@ -308,7 +349,13 @@ export function Workspace() {
     </div>
   );
 }
-function PatientExperience({ config }: { config: PublicConfig }) {
+function PatientExperience({
+  config,
+  onSeeBusiness,
+}: {
+  config: PublicConfig;
+  onSeeBusiness: (booking: PublicBooking) => void;
+}) {
   const [mode, setMode] = useState<"welcome" | "book" | "done" | "edit">(
     "welcome",
   );
@@ -409,69 +456,20 @@ function PatientExperience({ config }: { config: PublicConfig }) {
               <span />
             </div>
           </section>
-          <section
-            className="chat-preview"
-            aria-label="Mensaje de WhatsApp simulado"
-          >
-            <div className="chat-top">
-              <span className="chat-avatar">
-                <Leaf size={25} />
-              </span>
-              <div>
-                <strong>{config.business.name}</strong>
-                <small>
-                  <span />
-                  Cuenta de empresa · demo
-                </small>
-              </div>
-              <MoreHorizontal size={22} />
-            </div>
-            <div className="chat-body">
-              <span className="chat-today">HOY</span>
-              <div className="chat-security">
-                <ShieldCheck size={12} />
-                Conversación simulada. No se enviarán mensajes.
-              </div>
-              <div className="chat-bubble welcome-message">
-                Hola 👋 Gracias por escribir a{" "}
-                <strong>{config.business.name}</strong>.<br />
-                <br />
-                Puedes reservar tu cita online en menos de un minuto. Si
-                necesitas ayuda, también puedes hablar con nosotros.
-                <span className="message-time">
-                  10:00 <CheckCheck size={14} />
-                </span>
-              </div>
-              <div className="chat-actions">
-                <button onClick={() => setMode("book")}>
-                  <CalendarDays size={17} />
-                  Reservar cita
-                  <ArrowRight size={16} />
-                </button>
-                <button
-                  onClick={() => {
-                    setManage(true);
-                    setError("");
-                  }}
-                >
-                  <Clock3 size={17} />
-                  Consultar o gestionar mi cita
-                </button>
-                <button onClick={() => setContact(true)}>
-                  <MessageCircle size={17} />
-                  Hablar con la clínica
-                </button>
-              </div>
-              <div className="chat-bottom-note">
-                <Leaf size={15} />
-                {config.business.tagline}
-              </div>
-            </div>
-            <div className="chat-footer">
-              <span>Tu próxima cita, a un mensaje de distancia.</span>
-              <HeartHandshake size={18} />
-            </div>
-          </section>
+          <WhatsAppAgent
+            config={config}
+            onManage={() => {
+              setManage(true);
+              setError("");
+            }}
+            onContact={() => setContact(true)}
+            onForm={() => setMode("book")}
+            onBooked={(b) => {
+              setCode(b.code);
+              setPhone(b.phone);
+            }}
+            onSeeBusiness={onSeeBusiness}
+          />
         </div>
       )}
       {(mode === "book" || mode === "edit") && (

@@ -86,7 +86,7 @@ test("contraste, etiquetas y adaptación en cliente y negocio", async ({
   expect(desktop.violations.map((v) => v.id)).toEqual([]);
   expect(mobile.violations.map((v) => v.id)).toEqual([]);
   await page
-    .getByRole("button", { name: "Reservar cita", exact: true })
+    .getByRole("button", { name: "Prefiero reservar con el formulario" })
     .click();
   const services = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa"])
