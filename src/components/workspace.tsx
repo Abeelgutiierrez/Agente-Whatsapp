@@ -104,7 +104,7 @@ export function Workspace() {
     window.history.replaceState(
       null,
       "",
-      next === "client" ? "?vista=cliente" : "/",
+      next === "client" ? "/demo?vista=cliente" : "/demo",
     );
   }
   if (!config || !view)
@@ -124,7 +124,7 @@ export function Workspace() {
         <aside className="sidebar">
           <Link
             className="brand"
-            href="/"
+            href="/demo"
             aria-label={`${business.name}, inicio`}
           >
             <div className="brand-symbol">
@@ -196,7 +196,7 @@ export function Workspace() {
               </strong>
             </div>
           ) : (
-            <a className="brand client-brand" href="?vista=cliente">
+            <a className="brand client-brand" href="/demo?vista=cliente">
               <div className="brand-symbol">
                 <Leaf size={22} />
               </div>

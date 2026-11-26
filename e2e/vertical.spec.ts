@@ -20,11 +20,11 @@ test("reserva móvil → agenda en otro navegador → hueco ocupado", async ({
   page.on("pageerror", (error) =>
     console.error("Error navegador cliente:", error.message),
   );
-  await panel.goto("/");
+  await panel.goto("/demo");
   await expect(
     panel.getByRole("heading", { name: "Buenos días, equipo" }),
   ).toBeVisible({ timeout: 30000 });
-  await page.goto("/?vista=cliente");
+  await page.goto("/demo?vista=cliente");
   await page
     .getByRole("button", { name: "Reservar cita", exact: true })
     .click();

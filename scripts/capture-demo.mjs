@@ -53,7 +53,7 @@ try {
     viewport: { width: 1440, height: 1060 },
     deviceScaleFactor: 1,
   });
-  await page.goto(origin);
+  await page.goto(`${origin}/demo`);
   await page.getByRole("heading", { name: "Buenos días, equipo" }).waitFor();
   await page.screenshot({ path: "docs/screenshots/hoy.png" });
   await page
@@ -68,7 +68,7 @@ try {
     fullPage: true,
   });
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto(`${origin}/?vista=cliente`);
+  await page.goto(`${origin}/demo?vista=cliente`);
   await page
     .getByRole("button", { name: "Reservar cita", exact: true })
     .waitFor();

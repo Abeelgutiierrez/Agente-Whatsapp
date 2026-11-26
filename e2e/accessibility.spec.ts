@@ -8,7 +8,7 @@ test("contraste, etiquetas y adaptación en cliente y negocio", async ({
     data: { action: "reset", confirmation: "RESTABLECER" },
   });
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await page.goto("/");
+  await page.goto("/demo");
   await expect(
     page.getByRole("heading", { name: "Buenos días, equipo" }),
   ).toBeVisible({ timeout: 30000 });

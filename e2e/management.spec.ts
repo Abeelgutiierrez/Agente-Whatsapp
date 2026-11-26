@@ -9,7 +9,7 @@ test("recepción crea, cambia servicio y profesional, y cancela una cita", async
   request,
 }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await page.goto("/");
+  await page.goto("/demo");
   await page.getByRole("button", { name: "Nueva cita", exact: true }).click();
   await page.getByRole("button", { name: /Podología Cuida/ }).click();
   await page.locator(".calendar-week button:not([disabled])").first().click();
@@ -86,7 +86,7 @@ test("cliente gestiona una cita futura y descarga su calendario", async ({
     })
   ).json();
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/?vista=cliente");
+  await page.goto("/demo?vista=cliente");
   await page
     .getByRole("button", { name: "Consultar o gestionar mi cita" })
     .click();
