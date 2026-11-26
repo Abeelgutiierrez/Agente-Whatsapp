@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import {
   ArrowDownToLine,
   ArrowUpRight,
@@ -60,6 +60,12 @@ import {
 import { BookingFlow, type Editing } from "./booking-flow";
 import { Settings } from "./settings";
 import type { Section } from "./workspace";
+// Ids (citas y clientes) recién llegados o cambiados: se pintan de otro color
+// durante unos segundos para que se vea en directo qué ha cambiado.
+type FlashKind = "new" | "changed";
+const FlashContext = createContext<Map<string, FlashKind>>(new Map());
+const flashClass = (kind?: FlashKind | false) =>
+  kind ? (kind === "new" ? " flash" : " flash flash-changed") : "";
 type Props = {
   state: State;
   config: PublicConfig;
@@ -71,7 +77,9 @@ type Props = {
   focusBooking?: string | null;
   onFocusHandled?: () => void;
   recentWhatsApp?: string[];
+  flash?: Record<string, FlashKind>;
 };
+export type { FlashKind };
 export function Business({
   state,
   config,
@@ -83,7 +91,12 @@ export function Business({
   focusBooking,
   onFocusHandled,
   recentWhatsApp = [],
+  flash = {},
 }: Props) {
+  const flashSet = useMemo(
+    () => new Map(Object.entries(flash) as [string, FlashKind][]),
+    [flash],
+  );
   const today = dayKey(state.meta.now);
   const [bookingId, setBookingId] = useState<string | null>(null);
   const [clientId, setClientId] = useState<string | null>(null);
@@ -148,7 +161,7 @@ export function Business({
     }
   }
   return (
-    <>
+    <FlashContext.Provider value={flashSet}>
       {section === "today" && (
         <Today
           state={state}
@@ -310,7 +323,7 @@ export function Business({
           />
         )}
       </Modal>
-    </>
+    </FlashContext.Provider>
   );
 }
 function Today({
@@ -330,6 +343,7 @@ function Today({
   recentWhatsApp: string[];
 }) {
   const today = dayKey(state.meta.now);
+  const flash = useContext(FlashContext);
   const data = useMemo(() => metrics(state, today, today), [state, today]);
   const [showPast, setShowPast] = useState(false);
   const upcoming = data.all.filter(
@@ -398,7 +412,7 @@ function Today({
         }
       />
       <div className="daily-overview">
-        <div className="next-card">
+        <div className={`next-card${flashClass(next && flash.get(next.id))}`}>
           <div className="next-card-top">
             <span>
               <span className="live-dot" />
@@ -586,7 +600,9 @@ function Today({
             </div>
             <div className="attention-content">
               {latestWhatsApp && (
-                <div className="attention-item whatsapp-item">
+                <div
+                  className={`attention-item whatsapp-item${flashClass(flash.get(latestWhatsApp.id))}`}
+                >
                   <span className="attention-icon green">
                     <MessageCircle size={16} />
                   </span>
@@ -706,9 +722,10 @@ function AppointmentRow({
 }) {
   const c = state.clients.find((c) => c.id === b.clientId)!;
   const p = state.professionals.find((p) => p.id === b.professionalId)!;
+  const flash = useContext(FlashContext);
   return (
     <div
-      className={`appointment-row ${b.status === "cancelada" ? "cancelled-row" : ""} ${b.createdAt === state.meta.now ? "new-row" : ""}`}
+      className={`appointment-row ${b.status === "cancelada" ? "cancelled-row" : ""} ${b.createdAt === state.meta.now ? "new-row" : ""}${flashClass(flash.get(b.id))}`}
     >
       <strong>
         {timeLabel(b.start)}
@@ -850,6 +867,7 @@ function Agenda({
   onExport: () => void;
 }) {
   const [view, setView] = useState<"day" | "week">("day");
+  const flash = useContext(FlashContext);
   const start = view === "week" ? weekStart(filters.from) : filters.from;
   const end = view === "week" ? nextDay(start, 6) : start;
   const bookings = filteredBookings(state, {
@@ -1006,7 +1024,7 @@ function Agenda({
                       .map((b) => (
                         <button
                           key={b.id}
-                          className={`week-booking ${b.status === "cancelada" ? "cancelled-row" : ""}`}
+                          className={`week-booking ${b.status === "cancelada" ? "cancelled-row" : ""}${flashClass(flash.get(b.id))}`}
                           style={{
                             borderLeftColor: state.professionals.find(
                               (p) => p.id === b.professionalId,
@@ -1292,6 +1310,7 @@ function Clients({
 }) {
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(0);
+  const flash = useContext(FlashContext);
   const clients = useMemo(
     () =>
       state.clients
@@ -1311,8 +1330,13 @@ function Clients({
               ) ||
               c.phone.includes(query.replace(/\s/g, ""))),
         )
-        .sort((a, b) => a.client.name.localeCompare(b.client.name, "es")),
-    [state, inactive, query],
+        // Los clientes recién llegados, primero; el resto, por nombre.
+        .sort(
+          (a, b) =>
+            Number(flash.has(b.client.id)) - Number(flash.has(a.client.id)) ||
+            a.client.name.localeCompare(b.client.name, "es"),
+        ),
+    [state, inactive, query, flash],
   );
   return (
     <>
@@ -1386,7 +1410,7 @@ function Clients({
             .map(({ client: c, summary }) => (
               <button
                 key={c.id}
-                className="client-card"
+                className={`client-card${flashClass(flash.get(c.id))}`}
                 onClick={() => openClient(c.id)}
               >
                 <div className="client-card-top">

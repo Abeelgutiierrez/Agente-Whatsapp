@@ -25,7 +25,7 @@ import type {
 import { dateLabel, timeLabel, money } from "@/domain/time";
 import { api } from "@/lib/http";
 import { BookingFlow, Confirmation } from "./booking-flow";
-import { Business } from "./business";
+import { Business, type FlashKind } from "./business";
 import { WhatsAppAgent } from "./whatsapp-agent";
 import { Badge, ErrorBox, Loading, Modal } from "./ui";
 export type Section = "today" | "agenda" | "clients" | "insights" | "settings";
@@ -35,6 +35,15 @@ const navigation = [
   { id: "clients", label: "Clientes", icon: UsersRound },
   { id: "insights", label: "Cómo va el negocio", icon: ChartNoAxesCombined },
 ] as const;
+// Cuánto dura el resaltado de lo nuevo en la vista negocio.
+const FLASH_MS = 12000;
+type Snapshot = { bookings: Map<string, string>; clients: Set<string> };
+const signature = (b: Booking) =>
+  `${b.version}|${b.status}|${b.start}|${b.professionalId}`;
+const takeSnapshot = (s: State): Snapshot => ({
+  bookings: new Map(s.bookings.map((b) => [b.id, signature(b)])),
+  clients: new Set(s.clients.map((c) => c.id)),
+});
 export function Workspace() {
   const [view, setView] = useState<"business" | "client" | null>(null);
   const [section, setSection] = useState<Section>("today");
@@ -47,22 +56,47 @@ export function Workspace() {
   const [focusBooking, setFocusBooking] = useState<string | null>(null);
   // Reservas de WhatsApp que han entrado mientras la demo está abierta.
   const [recentWhatsApp, setRecentWhatsApp] = useState<string[]>([]);
+  // Elementos recién llegados o cambiados: se resaltan unos segundos.
+  const [flash, setFlash] = useState<Record<string, FlashKind>>({});
   const revision = useRef(-1);
-  const knownBookings = useRef<Set<string> | null>(null);
+  const snapshot = useRef<Snapshot | null>(null);
   const refresh = useCallback(async (force = false) => {
     try {
       const data = await api<State & { unchanged?: boolean }>(
         `business?revision=${force ? -1 : revision.current}`,
       );
       if (!data.unchanged) {
+        const before = snapshot.current;
+        snapshot.current = takeSnapshot(data);
+        const changed: Record<string, FlashKind> = {};
+        if (before) {
+          for (const b of data.bookings) {
+            const old = before.bookings.get(b.id);
+            if (old === undefined) changed[b.id] = "new";
+            else if (old !== signature(b)) changed[b.id] = "changed";
+          }
+          for (const c of data.clients)
+            if (!before.clients.has(c.id)) changed[c.id] = "new";
+        }
+        const ids = Object.keys(changed);
+        if (ids.length) {
+          setFlash((f) => ({ ...f, ...changed }));
+          setTimeout(
+            () =>
+              setFlash((f) =>
+                Object.fromEntries(
+                  Object.entries(f).filter(([id]) => !ids.includes(id)),
+                ),
+              ),
+            FLASH_MS,
+          );
+        }
         // Aviso en vivo cuando entra una reserva nueva por WhatsApp.
-        const known = knownBookings.current;
-        const fresh = known
+        const fresh = before
           ? data.bookings.filter(
-              (b) => !known.has(b.id) && b.source === "WhatsApp",
+              (b) => !before.bookings.has(b.id) && b.source === "WhatsApp",
             )
           : [];
-        knownBookings.current = new Set(data.bookings.map((b) => b.id));
         const last = fresh.at(-1);
         if (fresh.length)
           setRecentWhatsApp((ids) => [
@@ -101,7 +135,7 @@ export function Workspace() {
     // Foto inicial de la agenda para detectar después las reservas nuevas.
     api<State>("business?revision=-1")
       .then((data) => {
-        knownBookings.current ??= new Set(data.bookings.map((b) => b.id));
+        snapshot.current ??= takeSnapshot(data);
       })
       .catch(() => {});
   }, []);
@@ -290,6 +324,7 @@ export function Workspace() {
                 newBooking={() => setNewBooking(true)}
                 focusBooking={focusBooking}
                 recentWhatsApp={recentWhatsApp}
+                flash={flash}
                 onFocusHandled={() => setFocusBooking(null)}
               />
             )}

@@ -7,6 +7,8 @@ import {
   schedules,
 } from "./defaults";
 import { atTime, dayKey, nextDay, plusMinutes, zoned } from "./time";
+// Datos de ejemplo deliberadamente escasos: una agenda con aire para que en la
+// demostración se vea enseguida lo que entra nuevo (por WhatsApp o en recepción).
 const names = [
   "Elena Ríos",
   "Pablo Soler",
@@ -22,33 +24,12 @@ const names = [
   "Sergio Alba",
   "Clara Montes",
   "Mario Sierra",
-  "Rosa Fuentes",
-  "Adrián Salas",
-  "Teresa Roca",
-  "Álvaro Gil",
-  "Beatriz Molina",
-  "Iván Torres",
-  "Sara Lozano",
-  "Diego Cano",
-  "Eva Ferrer",
-  "Raúl Lázaro",
-  "Patricia Mora",
-  "Andrés Campos",
-  "Inés Rubio",
-  "Miguel Sanz",
-  "Julia Pastor",
-  "Óscar Bernal",
-  "Marina Calvo",
-  "David Castaño",
-  "Alicia Peña",
-  "Rubén Casas",
+  // Clientes que hace tiempo que no vienen (sin citas recientes).
   "Silvia Rey",
   "Gabriel Vela",
   "Cristina Costa",
-  "Luis Méndez",
-  "Olga Ramos",
-  "Tomás León",
 ];
+const REGULARS = 14;
 export function createSeed(reference = new Date()): State {
   let today = dayKey(reference);
   if (zoned(atTime(today, "12:00")).getDay() === 0) today = nextDay(today, 1);
@@ -163,15 +144,16 @@ export function createSeed(reference = new Date()): State {
         weekday === 6 ? [9, 10, 11, 12] : [9, 10, 11, 12, 13, 16, 17, 18, 19];
       for (const hour of hours) {
         const hash = Math.abs(offset * 31 + p * 17 + hour * 7);
-        let selected = hash % 10 < (weekday === 2 && hour >= 16 ? 3 : 6);
-        if (offset === busyOffset) selected = hash % 13 !== 0;
+        // Pasado con actividad (para los indicadores); futuro con huecos.
+        let selected =
+          offset < 0
+            ? hash % 10 < (weekday === 2 && hour >= 16 ? 2 : 4)
+            : hash % 10 < 2;
+        if (offset === busyOffset) selected = hash % 10 < 3;
+        // Hoy: pocas citas, fáciles de explicar una a una.
         if (offset === 0)
           selected = (
-            p === 0
-              ? [9, 10, 12, 16, 18]
-              : p === 1
-                ? [9, 10, 11, 12, 17]
-                : [9, 11, 16, 18]
+            p === 0 ? [9, 12] : p === 1 ? [10, 17] : [11, 18]
           ).includes(hour);
         if (!selected) continue;
         const status =
@@ -183,14 +165,18 @@ export function createSeed(reference = new Date()): State {
                 : "atendida"
             : offset === 0 && hour === 9
               ? "atendida"
-              : hash % 9 === 0
+              : offset === 0 && hour === 17
                 ? "pendiente"
-                : "confirmada";
+                : offset === 0
+                  ? "confirmada"
+                  : hash % 9 === 0
+                    ? "pendiente"
+                    : "confirmada";
         add(
           date,
           `${hour}:00`,
           professionals[p].id,
-          (hash + p * 5 + hour * 2) % 34,
+          (hash + p * 5 + hour * 2) % REGULARS,
           status,
           offset === 0 && p === 1 && hour === 11 ? "fisio" : undefined,
         );
@@ -198,7 +184,7 @@ export function createSeed(reference = new Date()): State {
     }
   }
   add(today, "17:00", "laura", 0, "cancelada", "fisio");
-  for (let i = 34; i < 40; i++) {
+  for (let i = REGULARS; i < names.length; i++) {
     let date = nextDay(today, -110 - i);
     if (zoned(atTime(date, "12:00")).getDay() === 0) date = nextDay(date, 1);
     add(date, "09:00", "laura", i, "atendida", "fisio");

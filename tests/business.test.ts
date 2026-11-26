@@ -109,7 +109,7 @@ describe("indicadores, exportación y configuración", () => {
     const inactive = s.clients
       .map((c) => clientSummary(s, c))
       .filter((c) => c.label === "Hace tiempo que no viene");
-    expect(inactive.length).toBe(6);
+    expect(inactive.length).toBe(3);
     expect(inactive.every((c) => !c.upcoming && c.daysSince! >= 90)).toBe(true);
   });
   it("respeta cambios de hora en Madrid y límites de sesión", () => {

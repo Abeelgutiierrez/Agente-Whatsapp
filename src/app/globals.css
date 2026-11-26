@@ -3861,3 +3861,56 @@ td {
     align-items: stretch;
   }
 }
+
+/* Resaltado temporal de lo que acaba de llegar o cambiar (vista negocio).
+   Una capa ámbar que se desvanece, sin tocar el fondo propio de cada tarjeta. */
+.flash {
+  position: relative;
+}
+.flash::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: #f6c15a33;
+  box-shadow: inset 0 0 0 2px #e0a53a;
+  pointer-events: none;
+  animation: flash-fade 12s ease-out both;
+}
+.flash::before {
+  content: "Nuevo";
+  position: absolute;
+  z-index: 1;
+  top: 6px;
+  right: 8px;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  background: #e0a53a;
+  color: #2f2510;
+  pointer-events: none;
+  animation: flash-fade 12s ease-out both;
+}
+.flash.new-row .appointment-person strong:after {
+  display: none;
+}
+.flash-changed::before {
+  content: none;
+}
+@keyframes flash-fade {
+  0%,
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .flash::after,
+  .flash::before {
+    animation: none;
+  }
+}

@@ -37,6 +37,20 @@ test("reserva móvil → agenda en otro navegador → hueco ocupado", async ({
   await page.getByLabel("Teléfono", { exact: true }).fill("000987654");
   await page.getByLabel(/Acepto que la clínica/).check();
   await page.getByRole("button", { name: "Revisar mi cita" }).click();
+  const freeByStart = async () => {
+    const meta = (await (await request.get("/api/config")).json()).meta;
+    const days = await (
+      await request.get(
+        `/api/availability?serviceId=fisio&from=${meta.now.slice(0, 10)}&days=7`,
+      )
+    ).json();
+    const count: Record<string, number> = {};
+    for (const d of days as { slots: { start: string }[] }[])
+      for (const slot of d.slots)
+        count[slot.start] = (count[slot.start] ?? 0) + 1;
+    return count;
+  };
+  const before = await freeByStart();
   await page.getByRole("button", { name: "Confirmar mi reserva" }).click();
   await expect(
     page.getByRole("heading", { name: "¡Nos vemos pronto!" }),
@@ -61,9 +75,19 @@ test("reserva móvil → agenda en otro navegador → hueco ocupado", async ({
     .click();
   await page.getByRole("button", { name: /Fisioterapia Recupera/ }).click();
   await page.locator(".calendar-week button:not([disabled])").first().click();
-  await expect(
-    page.locator(".time-grid button").filter({ hasText: selected }),
-  ).toHaveCount(0);
+  // La plaza reservada ya no se ofrece: a esa hora queda un profesional libre menos.
+  const after = await freeByStart();
+  const state = await (await request.get("/api/business")).json();
+  const bookedStart = state.bookings.find(
+    (b: { clientId: string }) =>
+      state.clients.find((c: { id: string }) => c.id === b.clientId)?.name ===
+      "Alba Prueba Vertical",
+  ).start;
+  expect(after[bookedStart] ?? 0).toBe(before[bookedStart] - 1);
+  if (before[bookedStart] === 1)
+    await expect(
+      page.locator(".time-grid button").filter({ hasText: selected }),
+    ).toHaveCount(0);
   await expect(page.locator("body")).toHaveJSProperty("scrollWidth", 390);
   await page.screenshot({
     path: "test-results/client-mobile.png",

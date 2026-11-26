@@ -46,12 +46,11 @@ type Draft = {
 };
 
 const norm = (s: string) =>
-  s
-    .toLocaleLowerCase("es")
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .trim();
-const words = (s: string) => norm(s).split(/[^a-z0-9]+/).filter(Boolean);
+  s.toLocaleLowerCase("es").normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
+const words = (s: string) =>
+  norm(s)
+    .split(/[^a-z0-9]+/)
+    .filter(Boolean);
 const yes = (s: string) =>
   /^(si|vale|ok|okay|claro|acepto|de acuerdo|confirmo|confirmar|perfecto|correcto|adelante)\b/.test(
     norm(s),
@@ -153,7 +152,8 @@ export function WhatsAppAgent({
       }));
   function dayName(date: string) {
     if (date === today) return `Hoy, ${dateLabel(date, "EEEE d")}`;
-    if (date === nextDay(today, 1)) return `Mañana, ${dateLabel(date, "EEEE d")}`;
+    if (date === nextDay(today, 1))
+      return `Mañana, ${dateLabel(date, "EEEE d")}`;
     return dateLabel(date, "EEEE d 'de' MMMM");
   }
   const capital = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -175,7 +175,9 @@ export function WhatsAppAgent({
   function timeReplies(day: AvailabilityDay, filter?: "am" | "pm"): Reply[] {
     const slots = uniqueSlots(day);
     const am = slots.filter((s) => Number(timeLabel(s.start).slice(0, 2)) < 14);
-    const pm = slots.filter((s) => Number(timeLabel(s.start).slice(0, 2)) >= 14);
+    const pm = slots.filter(
+      (s) => Number(timeLabel(s.start).slice(0, 2)) >= 14,
+    );
     const pick =
       filter === "am"
         ? am.slice(0, 10)
@@ -213,7 +215,10 @@ export function WhatsAppAgent({
             "¿Quieres probar con otro servicio o prefieres que te atienda alguien del equipo?",
           ],
           "service",
-          [...serviceReplies(), { label: "Hablar con la clínica", value: "humano" }],
+          [
+            ...serviceReplies(),
+            { label: "Hablar con la clínica", value: "humano" },
+          ],
         );
         return;
       }
@@ -314,7 +319,10 @@ export function WhatsAppAgent({
         chooseService(d.service);
       } else
         say(
-          [`No he podido guardar la cita: ${message}`, "¿Lo intentamos de nuevo?"],
+          [
+            `No he podido guardar la cita: ${message}`,
+            "¿Lo intentamos de nuevo?",
+          ],
           "review",
           [
             { label: "Sí, confirmar", value: "confirmar" },
@@ -347,9 +355,12 @@ export function WhatsAppAgent({
       return days.find((d) => d.date === nextDay(today, 1));
     const wd = weekdays.findIndex((w) => t.includes(w));
     if (wd >= 0)
-      return open.find((d) => new Date(`${d.date}T12:00:00Z`).getUTCDay() === wd);
+      return open.find(
+        (d) => new Date(`${d.date}T12:00:00Z`).getUTCDay() === wd,
+      );
     const num = t.match(/\b(\d{1,2})\b/);
-    if (num) return days.find((d) => Number(d.date.slice(8)) === Number(num[1]));
+    if (num)
+      return days.find((d) => Number(d.date.slice(8)) === Number(num[1]));
     if (/primer|cuanto antes|lo antes|cualquier/.test(t)) return open[0];
     return undefined;
   }
@@ -379,18 +390,28 @@ export function WhatsAppAgent({
     switch (step) {
       case "menu":
       case "done": {
-        if (value === "gestionar" || /gestion|consult|cancel|cambiar|localizador|mi cita/.test(t)) {
+        if (
+          value === "gestionar" ||
+          /gestion|consult|cancel|cambiar|localizador|mi cita/.test(t)
+        ) {
           say(
-            ["Te abro la gestión de citas. Necesitarás tu localizador y tu teléfono 🔎"],
+            [
+              "Te abro la gestión de citas. Necesitarás tu localizador y tu teléfono 🔎",
+            ],
             step,
             step === "done" ? replies : menu,
           );
           timers.current.push(setTimeout(onManage, TYPING_MS + 300));
           return;
         }
-        if (value === "humano" || /humano|persona|alguien|hablar|llamar|equipo/.test(t)) {
+        if (
+          value === "humano" ||
+          /humano|persona|alguien|hablar|llamar|equipo/.test(t)
+        ) {
           say(
-            ["Te paso con el equipo de la clínica 🤝 Mientras, aquí tienes nuestros datos."],
+            [
+              "Te paso con el equipo de la clínica 🤝 Mientras, aquí tienes nuestros datos.",
+            ],
             step,
             step === "done" ? replies : menu,
           );
@@ -403,7 +424,11 @@ export function WhatsAppAgent({
           chooseService(service);
           return;
         }
-        if (value === "reservar" || value === "otra" || /reserv|cita|hora|pedir|quiero/.test(t)) {
+        if (
+          value === "reservar" ||
+          value === "otra" ||
+          /reserv|cita|hora|pedir|quiero/.test(t)
+        ) {
           setDraft({});
           setBooking(null);
           setOperationKey(uid());
@@ -419,7 +444,9 @@ export function WhatsAppAgent({
             [
               config.services
                 .filter((s) => s.active)
-                .map((s) => `• ${s.name}: ${s.duration} min · ${money(s.price)}`)
+                .map(
+                  (s) => `• ${s.name}: ${s.duration} min · ${money(s.price)}`,
+                )
                 .join("\n"),
               "¿Te reservo alguno?",
             ],
@@ -429,7 +456,9 @@ export function WhatsAppAgent({
           return;
         }
         say(
-          ["Puedo reservarte una cita, ayudarte con la que ya tienes o pasarte con el equipo. ¿Qué prefieres?"],
+          [
+            "Puedo reservarte una cita, ayudarte con la que ya tienes o pasarte con el equipo. ¿Qué prefieres?",
+          ],
           step,
           menu,
         );
@@ -456,7 +485,11 @@ export function WhatsAppAgent({
         if (value === "mas-dias" || /otro|mas|siguiente/.test(t)) {
           const page = dayReplies(days, dayPage + 1).length ? dayPage + 1 : 0;
           setDayPage(page);
-          say(["Estos son los siguientes días con hueco:"], "day", dayReplies(days, page));
+          say(
+            ["Estos son los siguientes días con hueco:"],
+            "day",
+            dayReplies(days, page),
+          );
           return;
         }
         const day = days.find((d) => d.date === value) || matchDay(input);
@@ -477,7 +510,11 @@ export function WhatsAppAgent({
         const day = draft.day;
         if (!day) return;
         if (value === "otro-dia" || /otro dia|cambiar dia/.test(t)) {
-          say(["Sin problema. ¿Qué otro día te va bien?"], "day", dayReplies(days, dayPage));
+          say(
+            ["Sin problema. ¿Qué otro día te va bien?"],
+            "day",
+            dayReplies(days, dayPage),
+          );
           return;
         }
         if (!value && /\b(por la )?(manana|tarde)\b/.test(t) && !/\d/.test(t)) {
@@ -499,7 +536,9 @@ export function WhatsAppAgent({
         if (slot) chooseSlot(slot);
         else
           say(
-            ["Esa hora no está libre. Elige una de estas o escribe por ejemplo «a las 17:00»:"],
+            [
+              "Esa hora no está libre. Elige una de estas o escribe por ejemplo «a las 17:00»:",
+            ],
             "time",
             timeReplies(day),
           );
@@ -522,8 +561,16 @@ export function WhatsAppAgent({
       }
       case "phone": {
         const phone = input.trim();
-        if (!/^[+0-9 ()-]{9,22}$/.test(phone) || phone.replace(/\D/g, "").length < 9) {
-          say(["Ese teléfono no parece válido. Escríbelo con 9 cifras, por ejemplo 000 987 654."], "phone");
+        if (
+          !/^[+0-9 ()-]{9,22}$/.test(phone) ||
+          phone.replace(/\D/g, "").length < 9
+        ) {
+          say(
+            [
+              "Ese teléfono no parece válido. Escríbelo con 9 cifras, por ejemplo 000 987 654.",
+            ],
+            "phone",
+          );
           return;
         }
         setDraft((d) => ({ ...d, phone }));
@@ -542,7 +589,9 @@ export function WhatsAppAgent({
       case "privacy": {
         if (value === "si" || (!value && yes(input))) {
           say(
-            ["¡Gracias! Y, solo si te apetece: ¿quieres recibir novedades y promociones de la clínica? (opcional)"],
+            [
+              "¡Gracias! Y, solo si te apetece: ¿quieres recibir novedades y promociones de la clínica? (opcional)",
+            ],
             "marketing",
             [
               { label: "Sí, quiero", value: "si" },
@@ -551,7 +600,9 @@ export function WhatsAppAgent({
           );
         } else if (value === "no" || no(input)) {
           say(
-            ["Lo entiendo. Sin ese permiso no puedo guardar la cita por aquí. Si cambias de opinión, pulsa «Acepto» o habla con la clínica."],
+            [
+              "Lo entiendo. Sin ese permiso no puedo guardar la cita por aquí. Si cambias de opinión, pulsa «Acepto» o habla con la clínica.",
+            ],
             "privacy",
             [
               { label: "Acepto", value: "si" },
@@ -559,10 +610,14 @@ export function WhatsAppAgent({
             ],
           );
         } else
-          say(["¿Aceptas que usemos tus datos para gestionar la cita?"], "privacy", [
-            { label: "Acepto", value: "si" },
-            { label: "No acepto", value: "no" },
-          ]);
+          say(
+            ["¿Aceptas que usemos tus datos para gestionar la cita?"],
+            "privacy",
+            [
+              { label: "Acepto", value: "si" },
+              { label: "No acepto", value: "no" },
+            ],
+          );
         return;
       }
       case "marketing": {
@@ -576,7 +631,11 @@ export function WhatsAppAgent({
         if (value === "confirmar" || (!value && yes(input))) {
           submit(draft);
         } else if (value === "cambiar" || /cambiar|no|otro/.test(t)) {
-          say(["Sin problema, empecemos de nuevo. ¿Qué servicio necesitas?"], "service", serviceReplies());
+          say(
+            ["Sin problema, empecemos de nuevo. ¿Qué servicio necesitas?"],
+            "service",
+            serviceReplies(),
+          );
         } else
           say(["¿Confirmo la cita?"], "review", [
             { label: "Sí, confirmar", value: "confirmar" },
@@ -617,7 +676,10 @@ export function WhatsAppAgent({
 
   return (
     <div className="agent-wrap">
-      <section className="chat-preview agent-chat" aria-label="WhatsApp simulado">
+      <section
+        className="chat-preview agent-chat"
+        aria-label="WhatsApp simulado"
+      >
         <div className="chat-top">
           <span className="chat-avatar">
             <Leaf size={25} />
@@ -644,7 +706,10 @@ export function WhatsAppAgent({
             Conversación simulada. No se envía ningún mensaje real.
           </div>
           {messages.map((m) => (
-            <div key={m.id} className={`agent-msg ${m.from === "user" ? "from-user" : "from-bot"}`}>
+            <div
+              key={m.id}
+              className={`agent-msg ${m.from === "user" ? "from-user" : "from-bot"}`}
+            >
               <div className="agent-bubble">
                 {m.text}
                 <span className="agent-time">
@@ -655,7 +720,10 @@ export function WhatsAppAgent({
             </div>
           ))}
           {typing && (
-            <div className="agent-msg from-bot" aria-label="El asistente está escribiendo">
+            <div
+              className="agent-msg from-bot"
+              aria-label="El asistente está escribiendo"
+            >
               <div className="agent-bubble agent-typing">
                 <i />
                 <i />
@@ -664,7 +732,11 @@ export function WhatsAppAgent({
             </div>
           )}
           {replies.length > 0 && (
-            <div className="agent-replies" role="group" aria-label="Respuestas rápidas">
+            <div
+              className="agent-replies"
+              role="group"
+              aria-label="Respuestas rápidas"
+            >
               {replies.map((r) => (
                 <button key={r.value + r.label} onClick={() => answer(r)}>
                   {r.label}
@@ -695,9 +767,13 @@ export function WhatsAppAgent({
       {booking && step === "done" && (
         <div className="agent-demo-callout" role="status">
           <span>
-            <strong>Así lo ve la clínica:</strong> la reserva ya está en su agenda.
+            <strong>Así lo ve la clínica:</strong> la reserva ya está en su
+            agenda.
           </span>
-          <button className="button primary" onClick={() => onSeeBusiness(booking)}>
+          <button
+            className="button primary"
+            onClick={() => onSeeBusiness(booking)}
+          >
             Ver en la vista negocio
             <ArrowUpRight size={16} />
           </button>

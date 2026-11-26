@@ -24,7 +24,7 @@ test("acciones de agenda, cliente, mensajes, conclusiones y CSV", async ({
   );
   const c = state.clients.find((c: { id: string }) => c.id === b.clientId);
   await page
-    .getByRole("button", { name: `Abrir cita de ${c.name} a las 18:00` })
+    .getByRole("button", { name: new RegExp(`^Abrir cita de ${c.name} a las`) })
     .click();
   await page.getByRole("button", { name: "Confirmar", exact: true }).click();
   await expect(
