@@ -52,6 +52,19 @@ npm start
 
 Detén el servidor con Ctrl+C. Usa un solo servidor por archivo de base de datos.
 
+## Publicar en Easypanel
+
+El repositorio incluye un `Dockerfile` listo para Easypanel.
+
+1. En Easypanel, crea un proyecto y dentro un servicio **App**.
+2. En **Source**, elige **GitHub**, este repositorio y la rama a desplegar.
+3. En **Build**, selecciona **Dockerfile** (ruta `Dockerfile`).
+4. En **Mounts**, añade un **Volume** con _mount path_ `/app/data` para que las citas no se pierdan en cada despliegue.
+5. En **Domains**, deja o añade un dominio apuntando al puerto **3000**.
+6. Pulsa **Deploy**. La landing queda en `/` y el panel en `/demo`.
+
+Variables opcionales: `PORT` (por defecto 3000) y `DEMO_DB_PATH` (por defecto `/app/data/armonia.db`). La base se crea sola con datos ficticios en el primer arranque.
+
 ## Restablecer los datos ficticios
 
 Abre **Vista negocio → Configuración → Restablecer demo**, escribe `RESTABLECER` y confirma. Se recuperan la marca, los servicios, clientes y citas iniciales; se eliminan los cambios de la demostración y se fija una nueva fecha interna. No se publica ni se incluye una base SQLite inicial: se genera automáticamente.
