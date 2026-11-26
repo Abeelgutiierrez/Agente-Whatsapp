@@ -1,0 +1,11 @@
+node_modules
+.next
+.next-e2e
+data
+test-results
+playwright-report
+package-lock.json
+PROMPT_MAESTRO_PILOTO_RESERVAS.md
+AGENTS.md
+CLAUDE.md
+next-env.d.ts

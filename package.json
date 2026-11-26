@@ -1,0 +1,43 @@
+{
+  "name": "clinica-armonia",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --hostname 0.0.0.0",
+    "build": "next build",
+    "start": "next start --hostname 0.0.0.0",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write src tests e2e scripts *.ts *.mts *.mjs *.json README.md TASKS.md DEMO_LIMITATIONS.md RELEASE_NOTES.md",
+    "screenshots": "node scripts/capture-demo.mjs"
+  },
+  "dependencies": {
+    "@date-fns/tz": "1.5.0",
+    "@radix-ui/react-dialog": "1.1.23",
+    "@tailwindcss/postcss": "4.3.3",
+    "better-sqlite3": "13.0.3",
+    "date-fns": "4.4.0",
+    "lucide-react": "1.41.0",
+    "next": "16.3.4",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "tailwindcss": "4.3.3",
+    "zod": "4.5.4"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
+    "@playwright/test": "1.63.0",
+    "@types/better-sqlite3": "9.6.0",
+    "@types/node": "26.4.1",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.7",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.3.4",
+    "prettier": "3.9.6",
+    "typescript": "6.0.3",
+    "vitest": "5.0.0"
+  }
+}

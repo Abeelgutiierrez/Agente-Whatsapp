@@ -1,0 +1,17 @@
+CREATE TABLE IF NOT EXISTS schema_migrations (version INTEGER PRIMARY KEY);
+CREATE TABLE IF NOT EXISTS business (id TEXT PRIMARY KEY, name TEXT NOT NULL, tagline TEXT NOT NULL, address TEXT NOT NULL, phone TEXT NOT NULL, primaryColor TEXT NOT NULL, timezone TEXT NOT NULL, minNoticeHours INTEGER NOT NULL, maxAdvanceDays INTEGER NOT NULL, bufferMinutes INTEGER NOT NULL, slotStepMinutes INTEGER NOT NULL, cancellationHours INTEGER NOT NULL, confirmationText TEXT NOT NULL, reminderText TEXT NOT NULL, version INTEGER NOT NULL);
+CREATE TABLE IF NOT EXISTS meta (id TEXT PRIMARY KEY, now TEXT NOT NULL, revision INTEGER NOT NULL);
+CREATE TABLE IF NOT EXISTS services (id TEXT PRIMARY KEY, name TEXT NOT NULL, description TEXT NOT NULL, duration INTEGER NOT NULL CHECK(duration > 0), price INTEGER NOT NULL CHECK(price >= 0), active INTEGER NOT NULL, color TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS professionals (id TEXT PRIMARY KEY, name TEXT NOT NULL, role TEXT NOT NULL, active INTEGER NOT NULL, color TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS assignments (id TEXT PRIMARY KEY, serviceId TEXT NOT NULL REFERENCES services(id), professionalId TEXT NOT NULL REFERENCES professionals(id), UNIQUE(serviceId, professionalId));
+CREATE TABLE IF NOT EXISTS schedules (id TEXT PRIMARY KEY, professionalId TEXT NOT NULL REFERENCES professionals(id), weekday INTEGER NOT NULL CHECK(weekday BETWEEN 0 AND 6), startTime TEXT NOT NULL, endTime TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS blocks (id TEXT PRIMARY KEY, professionalId TEXT REFERENCES professionals(id), start TEXT NOT NULL, end TEXT NOT NULL, reason TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS clients (id TEXT PRIMARY KEY, name TEXT NOT NULL, phone TEXT NOT NULL, email TEXT NOT NULL, privacyConsent INTEGER NOT NULL, communicationConsent INTEGER NOT NULL, notes TEXT NOT NULL, createdAt TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS bookings (id TEXT PRIMARY KEY, code TEXT NOT NULL UNIQUE, clientId TEXT NOT NULL REFERENCES clients(id), serviceId TEXT NOT NULL REFERENCES services(id), professionalId TEXT NOT NULL REFERENCES professionals(id), serviceName TEXT NOT NULL, start TEXT NOT NULL, end TEXT NOT NULL, duration INTEGER NOT NULL, price INTEGER NOT NULL, bufferMinutes INTEGER NOT NULL, status TEXT NOT NULL CHECK(status IN ('pendiente','confirmada','atendida','cancelada','no presentada')), source TEXT NOT NULL, customerNote TEXT NOT NULL, internalNote TEXT NOT NULL, createdAt TEXT NOT NULL, version INTEGER NOT NULL);
+CREATE TABLE IF NOT EXISTS events (id TEXT PRIMARY KEY, bookingId TEXT NOT NULL REFERENCES bookings(id), at TEXT NOT NULL, action TEXT NOT NULL, actor TEXT NOT NULL, before TEXT NOT NULL, after TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS messages (id TEXT PRIMARY KEY, bookingId TEXT REFERENCES bookings(id), clientId TEXT REFERENCES clients(id), at TEXT NOT NULL, kind TEXT NOT NULL, text TEXT NOT NULL, status TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS operations (id TEXT PRIMARY KEY, bookingId TEXT NOT NULL REFERENCES bookings(id), fingerprint TEXT NOT NULL);
+CREATE INDEX IF NOT EXISTS bookings_professional_start ON bookings(professionalId, start);
+CREATE INDEX IF NOT EXISTS bookings_client_start ON bookings(clientId, start);
+CREATE INDEX IF NOT EXISTS clients_phone ON clients(phone);
+INSERT OR IGNORE INTO schema_migrations(version) VALUES (1);
