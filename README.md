@@ -41,7 +41,7 @@ npm ci
 npm run dev
 ```
 
-Abre http://localhost:3000 para ver la landing y http://localhost:3000/demo para el panel (botón **Ver demo**). La primera ejecución crea `data/armonia.db` con datos de ejemplo. Recargar la página o reiniciar el servidor conserva los cambios. Internet solo se necesita para instalar las dependencias y, opcionalmente, los navegadores de pruebas. Los recursos de la aplicación son locales.
+Abre http://localhost:3000 para ver la landing con el vídeo de ANA; el botón **Probar la demo** lleva a http://localhost:3000/demo, donde se elige vista cliente o vista negocio (también directas con `/demo?vista=cliente` y `/demo?vista=negocio`). La primera ejecución crea `data/armonia.db` con datos de ejemplo. Recargar la página o reiniciar el servidor conserva los cambios. Internet solo se necesita para instalar las dependencias y, opcionalmente, los navegadores de pruebas. Los recursos de la aplicación son locales.
 
 Para presentar una versión compilada:
 

@@ -10,9 +10,11 @@ import {
   Clock3,
   HeartHandshake,
   House,
+  LayoutDashboard,
   Leaf,
   Settings2,
   ShieldCheck,
+  Smartphone,
   Sparkles,
   UsersRound,
 } from "lucide-react";
@@ -27,6 +29,7 @@ import { api } from "@/lib/http";
 import { BookingFlow, Confirmation } from "./booking-flow";
 import { Business, type FlashKind } from "./business";
 import { WhatsAppAgent } from "./whatsapp-agent";
+import { AnaLogo, AnaMark } from "./brand";
 import { Badge, ErrorBox, Loading, Modal } from "./ui";
 export type Section = "today" | "agenda" | "clients" | "insights" | "settings";
 const navigation = [
@@ -45,7 +48,9 @@ const takeSnapshot = (s: State): Snapshot => ({
   clients: new Set(s.clients.map((c) => c.id)),
 });
 export function Workspace() {
-  const [view, setView] = useState<"business" | "client" | null>(null);
+  const [view, setView] = useState<"business" | "client" | "choose" | null>(
+    null,
+  );
   const [section, setSection] = useState<Section>("today");
   const [config, setConfig] = useState<PublicConfig | null>(null);
   const [state, setState] = useState<State | null>(null);
@@ -124,10 +129,13 @@ export function Workspace() {
     }
   }, []);
   useEffect(() => {
+    const vista = new URLSearchParams(window.location.search).get("vista");
     setView(
-      new URLSearchParams(window.location.search).get("vista") === "cliente"
+      vista === "cliente"
         ? "client"
-        : "business",
+        : vista === "negocio"
+          ? "business"
+          : "choose",
     );
     api<PublicConfig>("config")
       .then(setConfig)
@@ -166,9 +174,10 @@ export function Workspace() {
     window.history.replaceState(
       null,
       "",
-      next === "client" ? "/demo?vista=cliente" : "/demo",
+      next === "client" ? "/demo?vista=cliente" : "/demo?vista=negocio",
     );
   }
+  if (view === "choose") return <DemoChooser onPick={switchView} />;
   if (!config || !view)
     return (
       <>
@@ -186,15 +195,13 @@ export function Workspace() {
         <aside className="sidebar">
           <Link
             className="brand"
-            href="/demo"
+            href="/demo?vista=negocio"
             aria-label={`${business.name}, inicio`}
           >
-            <div className="brand-symbol">
-              <Leaf size={24} />
-            </div>
+            <AnaMark size={38} />
             <div>
               <strong>{business.name}</strong>
-              <small>GESTIÓN CON CALMA</small>
+              <small>PANEL · ANA</small>
             </div>
           </Link>
           <div className="workspace-label">TU ESPACIO DE TRABAJO</div>
@@ -266,24 +273,39 @@ export function Workspace() {
             </a>
           )}
           <div className="topbar-right">
-            <span className="demo-chip">
-              <span />
-              Demo interactiva
-            </span>
-            <div className="view-switch" aria-label="Cambiar experiencia">
+            <div
+              className="view-switch"
+              role="group"
+              aria-label="Cambiar experiencia"
+            >
               <button
                 className={view === "client" ? "selected" : ""}
+                aria-pressed={view === "client"}
+                aria-label="Vista cliente"
                 onClick={() => switchView("client")}
               >
-                Vista cliente
+                <Smartphone size={17} aria-hidden />
+                <span>
+                  Vista cliente
+                  <small>Así reserva tu cliente</small>
+                </span>
               </button>
               <button
                 className={view === "business" ? "selected" : ""}
+                aria-pressed={view === "business"}
+                aria-label="Vista negocio"
                 onClick={() => switchView("business")}
               >
-                Vista negocio
+                <LayoutDashboard size={17} aria-hidden />
+                <span>
+                  Vista negocio
+                  <small>Así gestionas tu agenda</small>
+                </span>
               </button>
             </div>
+            <Link className="demo-exit" href="/" aria-label="Volver a ANA">
+              <AnaLogo title="" />
+            </Link>
           </div>
         </header>
         <div className="demo-date">
@@ -331,9 +353,9 @@ export function Workspace() {
           </main>
         )}
         <footer className="app-footer">
-          <Leaf size={12} />
-          {business.name}
-          <span>Un poco más de calma, cada día.</span>
+          <AnaLogo className="app-footer-logo" title="ANA" />
+          Demo de ANA · {business.name} es un negocio ficticio
+          <Link href="/">Volver a la web</Link>
         </footer>
       </div>
       <Modal
@@ -682,5 +704,64 @@ function PatientExperience({
         </button>
       </Modal>
     </main>
+  );
+}
+
+function DemoChooser({
+  onPick,
+}: {
+  onPick: (view: "business" | "client") => void;
+}) {
+  return (
+    <div className="chooser">
+      <header className="chooser-top">
+        <Link href="/" aria-label="ANA, volver a la web">
+          <AnaMark size={36} />
+        </Link>
+        <span className="chooser-chip">Demo interactiva</span>
+      </header>
+      <main className="chooser-main">
+        <p className="chooser-kicker">Paso 2 · Pruébalo tú</p>
+        <h1>¿Cómo quieres verlo?</h1>
+        <p className="chooser-lead">
+          La demo tiene dos caras. Elige una: podrás cambiar a la otra cuando
+          quieras desde arriba.
+        </p>
+        <div className="chooser-grid">
+          <button className="chooser-card" onClick={() => onPick("client")}>
+            <span className="chooser-icon">
+              <Smartphone size={26} aria-hidden />
+            </span>
+            <span className="chooser-tag">Vista cliente</span>
+            <strong>Soy cliente</strong>
+            <span className="chooser-text">
+              Reserva una cita desde el móvil o por WhatsApp, como lo haría
+              cualquiera de tus clientes.
+            </span>
+            <span className="chooser-go">
+              Reservar una cita <ArrowRight size={16} aria-hidden />
+            </span>
+          </button>
+          <button className="chooser-card" onClick={() => onPick("business")}>
+            <span className="chooser-icon">
+              <LayoutDashboard size={26} aria-hidden />
+            </span>
+            <span className="chooser-tag">Vista negocio</span>
+            <strong>Soy el negocio</strong>
+            <span className="chooser-text">
+              Gestiona la agenda, los clientes y los horarios desde el panel, y
+              mira cómo va el negocio.
+            </span>
+            <span className="chooser-go">
+              Abrir el panel <ArrowRight size={16} aria-hidden />
+            </span>
+          </button>
+        </div>
+        <p className="chooser-tip">
+          Consejo: reserva primero como cliente y después abre la vista negocio
+          para ver cómo llega la cita al momento.
+        </p>
+      </main>
+    </div>
   );
 }

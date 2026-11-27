@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 export const metadata: Metadata = {
-  title: "Demo · Clínica Armonía",
+  title: "Demo · ANA",
 };
 export default function DemoLayout({
   children,

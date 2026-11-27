@@ -11,7 +11,7 @@ export const business: Business = {
   tagline: "Un espacio para sentirte mejor.",
   address: "Calle del Olivo, 12 · Madrid (dirección ficticia)",
   phone: "000 000 000",
-  primaryColor: "#245b50",
+  primaryColor: "#111113",
   timezone: "Europe/Madrid",
   minNoticeHours: 1,
   maxAdvanceDays: 60,

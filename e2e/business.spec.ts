@@ -10,7 +10,7 @@ test("acciones de agenda, cliente, mensajes, conclusiones y CSV", async ({
   request,
 }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await page.goto("/demo");
+  await page.goto("/demo?vista=negocio");
   await expect(
     page.getByRole("heading", { name: "Buenos días, equipo" }),
   ).toBeVisible({ timeout: 30000 });
@@ -87,7 +87,7 @@ test("acciones de agenda, cliente, mensajes, conclusiones y CSV", async ({
 test("configuración persistente y restablecimiento protegido", async ({
   page,
 }) => {
-  await page.goto("/demo");
+  await page.goto("/demo?vista=negocio");
   await page
     .getByRole("button", { name: "Configuración", exact: true })
     .click();

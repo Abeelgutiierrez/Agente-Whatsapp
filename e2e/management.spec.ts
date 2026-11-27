@@ -9,7 +9,7 @@ test("recepción crea, cambia servicio y profesional, y cancela una cita", async
   request,
 }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await page.goto("/demo");
+  await page.goto("/demo?vista=negocio");
   await page.getByRole("button", { name: "Nueva cita", exact: true }).click();
   await page.getByRole("button", { name: /Podología Cuida/ }).click();
   await page.locator(".calendar-week button:not([disabled])").first().click();

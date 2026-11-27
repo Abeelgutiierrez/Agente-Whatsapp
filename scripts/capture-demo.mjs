@@ -53,7 +53,7 @@ try {
     viewport: { width: 1440, height: 1060 },
     deviceScaleFactor: 1,
   });
-  await page.goto(`${origin}/demo`);
+  await page.goto(`${origin}/demo?vista=negocio`);
   await page.getByRole("heading", { name: "Buenos días, equipo" }).waitFor();
   await page.screenshot({ path: "docs/screenshots/hoy.png" });
   await page

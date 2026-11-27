@@ -17,7 +17,7 @@ test("conversación de WhatsApp → reserva → aviso en la vista negocio", asyn
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
   panel.on("pageerror", (e) => errors.push(e.message));
-  await panel.goto("/demo");
+  await panel.goto("/demo?vista=negocio");
   await expect(
     panel.getByRole("heading", { name: "Buenos días, equipo" }),
   ).toBeVisible({ timeout: 30000 });

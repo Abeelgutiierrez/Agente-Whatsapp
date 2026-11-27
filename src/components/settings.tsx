@@ -244,6 +244,7 @@ export function Settings({
                   })
                 }
               >
+                <option value="#111113">Negro ANA</option>
                 <option value="#245b50">Verde Armonía</option>
                 <option value="#365c77">Azul sereno</option>
                 <option value="#665074">Ciruela suave</option>
