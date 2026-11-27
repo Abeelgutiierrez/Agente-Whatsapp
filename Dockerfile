@@ -23,6 +23,7 @@ ENV NODE_ENV=production \
   DEMO_DB_PATH=/app/data/armonia.db
 COPY --from=build --chown=node:node /app/.next/standalone ./
 COPY --from=build --chown=node:node /app/.next/static ./.next/static
+COPY --from=build --chown=node:node /app/public ./public
 COPY --from=build --chown=node:node /app/src/server/migrations ./src/server/migrations
 RUN mkdir -p /app/data && chown node:node /app/data
 USER node
